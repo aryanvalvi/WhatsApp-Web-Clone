@@ -1,0 +1,100 @@
+// This is your improved Prisma schema file for a WhatsApp-like chat application
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String          @id @default(cuid())
+  name             String?
+  email            String          @unique // ✅ Added @unique - emails should be unique
+  password         String?
+  sentRequests     FriendRequest[] @relation("RequestSender")
+  userImage        String?
+  receivedRequests FriendRequest[] @relation("RequestReceiver")
+  messages         Message[]
+  Participant      Participant[]
+  //   // Timestamps
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model FriendRequest {
+  id         String              @id @default(cuid())
+  status     FriendRequestStatus @default(PENDING) // ✅ Added status enum
+  senderId   String
+  receiverId String
+  sender     User                @relation("RequestSender", fields: [senderId], references: [id])
+  receiver   User                @relation("RequestReceiver", fields: [receiverId], references: [id])
+  createdAt  DateTime            @default(now())
+
+  @@unique([senderId, receiverId])
+}
+
+model Friendship {
+  id String @id @default(cuid())
+
+  user1Id String
+  user2Id String
+
+  // Note: We'll need to handle this relationship carefully
+  // to avoid circular references
+
+  createdAt DateTime @default(now())
+
+  // ✅ Ensure unique friendships
+  @@unique([user1Id, user2Id])
+}
+
+model Room {
+  id           String        @id @default(cuid())
+  name         String? // ✅ Added name for group chats
+  participants Participant[]
+  messages     Message[] // ✅ Added: Room should have messages
+  Des          String?
+  createdAt    DateTime      @default(now())
+}
+
+model Participant {
+  id       String   @id @default(cuid())
+  userId   String
+  roomId   String
+  role     Role     @default(MEMBER)
+  user     User     @relation(fields: [userId], references: [id])
+  room     Room     @relation(fields: [roomId], references: [id])
+  joinedAt DateTime @default(now())
+
+  // ✅ Prevent user from joining same room twice
+  @@unique([userId, roomId])
+}
+
+model Message {
+  id       String  @id @default(cuid())
+  content  String
+  media    String?
+  senderId String
+  roomId   String
+  isRead   Boolean @default(false)
+
+  sender User @relation(fields: [senderId], references: [id])
+  room   Room @relation(fields: [roomId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+// ✅ Added: Enum for friend request status
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}

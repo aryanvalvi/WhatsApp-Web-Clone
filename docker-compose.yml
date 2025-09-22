@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: my-postgres-db2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./chat-db-backup.sql:/docker-entrypoint-initdb.d/restore.sql
+    networks:
+      - chat_network
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./server
+    container_name: my-backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      cloud_name: ${cloud_name}
+      api_key: ${api_key}
+      api_secret: ${api_secret}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "5001:5001"
+    networks:
+      - chat_network
+    depends_on:
+      - postgres
+
+  frontend:
+    build: ./client
+    container_name: my-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_Backend_Url2: ${NEXT_PUBLIC_Backend_Url2}
+      NEXT_PUBLIC_Frontend_Url: ${NEXT_PUBLIC_Frontend_Url}
+    restart: always
+    networks:
+      - chat_network
+    depends_on:
+      - backend
+
+networks:
+  chat_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

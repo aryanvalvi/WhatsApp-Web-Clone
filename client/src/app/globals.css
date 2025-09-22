@@ -5,22 +5,108 @@
   --foreground: #171717;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --background-radial-gray: radial-gradient(
+    ellipse at top left,
+    rgba(55, 65, 81, 0.8) 0%,
+    rgba(31, 41, 55, 0.6) 40%,
+    rgba(0, 0, 0, 1) 100%
+  );
+  --background-radial-orange: radial-gradient(
+    ellipse at top left,
+    rgba(217, 57, 1, 0.8) 0%,
+    rgba(217, 57, 1, 0.4) 20%,
+    rgba(31, 41, 55, 0.6) 40%,
+    rgba(0, 0, 0, 1) 100%
+  );
 }
-
+/* 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 0;
+}
+.path.circle {
+  animation: dash 0.9s ease-in-out;
+}
+.path.check {
+  stroke-dashoffset: -100;
+  animation: dash-check 0.9s 0.35s ease-in-out forwards;
+}
+
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+.path {
+  stroke-dasharray: 150; /* visible dash */
+  stroke-dashoffset: 0;
+  transform-origin: 50% 50%;
+}
+
+.path.loop {
+  animation: spin 1.6s linear infinite, dashloop 1.6s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dashloop {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90, 200;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: -125;
+  }
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-text-fill-color: white !important;
+  background-color: transparent !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
