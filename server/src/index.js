@@ -8,16 +8,19 @@ const route = require("./routes/route")
 const cookieParser = require("cookie-parser")
 const {PrismaClient} = require("@prisma/client")
 const prisma = new PrismaClient()
+require("dotenv").config()
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
+    origin: process.env.Frontend_Url,
     methods: ["GET", "POST"],
     credentials: true,
   })
 )
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.Frontend_Url,
     methods: ["GET", "POST"],
   },
 })
