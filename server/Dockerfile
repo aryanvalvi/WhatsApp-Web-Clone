@@ -12,6 +12,6 @@ COPY prisma ./prisma
 
 COPY . .
 
-EXPOSE 5001
+EXPOSE 5006
 
 CMD npx prisma generate && npx prisma migrate deploy && node src/index.js 

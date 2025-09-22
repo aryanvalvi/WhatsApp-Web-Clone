@@ -185,6 +185,6 @@ io.on("connection", socket => {
     // console.log(`a user is disconnect with id ${socket.id}`)
   })
 })
-server.listen(5001, () => {
+server.listen(5006, () => {
   console.log("server is running on port 5001")
 })

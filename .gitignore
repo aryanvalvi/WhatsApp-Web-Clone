@@ -1,2 +1,4 @@
 .env
 chat-db-backup.sql
+.DS_Store
+.gitignore
