@@ -2,37 +2,37 @@
 import Home from "@/components/Home"
 import React, {useEffect, useState} from "react"
 import {io} from "socket.io-client"
-const socket = io("http://localhost:5001")
+// const socket = io("http://localhost:5001")
 const page = () => {
-  const [username, setUsername] = useState("")
-  const [room, setRoom] = useState("")
-  const [currentMessage, setCurrentMessage] = useState("")
+  // const [username, setUsername] = useState("")
+  // const [room, setRoom] = useState("")
+  // const [currentMessage, setCurrentMessage] = useState("")
 
   // console.log(room)
   {
     /* Convexle */
   }
-  const joinRoom = () => {
-    socket.emit("join_room", room)
-  }
-  const sendMessage = () => {
-    const messageData = {
-      author: username,
-      room,
-      message: currentMessage,
-      time:
-        new Date(Date.now()).getHours() +
-        ":" +
-        new Date(Date.now()).getMinutes(),
-    }
-    socket.emit("send_message", messageData)
-  }
+  // const joinRoom = () => {
+  //   socket.emit("join_room", room)
+  // }
+  // const sendMessage = () => {
+  //   const messageData = {
+  //     author: username,
+  //     room,
+  //     message: currentMessage,
+  //     time:
+  //       new Date(Date.now()).getHours() +
+  //       ":" +
+  //       new Date(Date.now()).getMinutes(),
+  //   }
+  //   socket.emit("send_message", messageData)
+  // }
 
-  useEffect(() => {
-    socket.on("recieve_message", data => {
-      console.log(data)
-    })
-  }, [socket])
+  // useEffect(() => {
+  //   socket.on("recieve_message", data => {
+  //     console.log(data)
+  //   })
+  // }, [socket])
 
   return (
     <main className="flex w-full h-screen">

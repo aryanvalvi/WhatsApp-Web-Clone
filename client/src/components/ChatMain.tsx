@@ -99,7 +99,7 @@ const ChatMain = ({setShow}: any) => {
       console.log("Initializing socket connection for user:", user.id)
 
       // Disconnect existing socket if any
-      if (socket) {
+      if (socket) { 
         socket.disconnect()
       }
 
