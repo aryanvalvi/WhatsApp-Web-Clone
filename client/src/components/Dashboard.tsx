@@ -10,16 +10,23 @@ import {
 import {IoIosNotifications} from "react-icons/io"
 import LeftMain from "./LeftMain"
 import {
+  addNewRequest,
   getAllFriendRequestt,
   getAllRequestt,
   getFriends,
 } from "@/reduxStore/slices/FriendSlice"
 import Notification from "./Left/Notification"
+import {io} from "socket.io-client"
 import {setActiveTab} from "@/reduxStore/slices/DashboardSlice"
 import Image from "next/image"
+import {generate_socket_connection, socket} from "./socket/socketManager"
 
+// const socket = io(process.env.NEXT_PUBLIC_Backend_Url)
 const Dashboard = ({setShow}: any) => {
   const state = useAppSelector(state => state.authReducer.user)
+  const [socketReady, setSocketReady] = useState(false)
+  const [newNotification, setNewNotification] = useState()
+  console.log("notificatio is", newNotification)
   console.log(state)
   const success = useAppSelector(
     state => state.friendSliceAuth.sendRequestSuccess
@@ -43,12 +50,41 @@ const Dashboard = ({setShow}: any) => {
   // console.log(state)
 
   useEffect(() => {
+    // first render guard
+    if (state?.id) {
+      generate_socket_connection(state.id)
+    }
+    const checkConnection = setInterval(() => {
+      if (socket && socket.connected) {
+        setSocketReady(true)
+        clearInterval(checkConnection)
+      }
+    }, 100)
+    return () => clearInterval(checkConnection)
+  }, [state?.id])
+
+  useEffect(() => {
+    if (!socketReady || !socket) return
+    const handleFriendRequest = (data: any) => {
+      console.log("new friend req", data)
+      setNewNotification(data)
+      if (data) {
+        dispatch(addNewRequest(data.newRequest))
+      }
+    }
+    socket.on("friend_request_recieve", handleFriendRequest)
+
+    return () => {
+      socket.off("friend_request_recieve", handleFriendRequest)
+    }
+  }, [socketReady])
+  useEffect(() => {
     // setTimeout(() => {
     dispatch(getAllRequestt())
     dispatch(getAllFriendRequestt())
     dispatch(getFriends())
     // }, 1000)
-  }, [success, widrawSuccess, controlSuccess])
+  }, [success, widrawSuccess, controlSuccess, Notification2, newNotification])
 
   return (
     // className="flex flex-col justify-between items-center gap-4 md:mt-5"
@@ -89,7 +125,7 @@ const Dashboard = ({setShow}: any) => {
           <IoIosNotifications className="h-7 w-7  text-white "></IoIosNotifications>
           {Notification.requestCount !== null || Notification2 > 0 ? (
             <p className="bg-[#de3b00]  items-center flex justify-center w-4 h-4 rounded-full absolute top-0 right-2 text-[14px]">
-              <>{Notification.requestCount || Notification2}</>
+              <>{Notification.requestCount}</>
             </p>
           ) : (
             <p className="bg-black"></p>

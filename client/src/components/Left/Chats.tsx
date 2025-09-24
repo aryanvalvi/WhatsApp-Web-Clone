@@ -13,7 +13,8 @@ import {IoMdSearch} from "react-icons/io"
 import {MdOutlinePersonAddAlt} from "react-icons/md"
 import {io} from "socket.io-client"
 import SearchResult from "./HelperFunctions/SearchResult"
-const socket = io(process.env.NEXT_PUBLIC_Backend_Url)
+// const socket = io(process.env.NEXT_PUBLIC_Backend_Url)
+import {socket} from "../socket/socket"
 const Chats = ({setShow}: any) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [onClickSearch, setOnClickSearch] = useState(false)
@@ -101,6 +102,7 @@ const Chats = ({setShow}: any) => {
   }, [user, dispatch])
   useEffect(() => {
     if (!user?.id) return
+
     socket.emit("user_online", user.id)
     const handleFriendsOnline = (id: string) => {
       console.log(id + "is online")

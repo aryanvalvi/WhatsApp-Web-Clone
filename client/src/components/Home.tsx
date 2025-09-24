@@ -1,4 +1,4 @@
-import React, {useState} from "react"
+import React, {useEffect, useState} from "react"
 import {HiOutlineDotsVertical} from "react-icons/hi"
 
 import {IoIosArrowDroprightCircle} from "react-icons/io"
@@ -6,10 +6,23 @@ import {IoIosArrowDroprightCircle} from "react-icons/io"
 import Link from "next/link"
 
 import AuthWrapper from "./Authentication/AuthWrapper"
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "@/reduxStore/hook/customHookReducer"
+import {useRouter} from "next/navigation"
+import {demoLogin} from "@/reduxStore/slices/LoginSlice"
 
 const Home = () => {
   const [showLogin, setShowLogin] = useState(false)
-
+  const dispatch = useAppDispatch()
+  const router = useRouter()
+  const user = useAppSelector(state => state.authReducer.user)
+  useEffect(() => {
+    if (user) {
+      router.push("/chat")
+    }
+  }, [user, dispatch])
   return (
     <div className="w-full max-w-[1920px] mx-auto ">
       <div className="min-h-screen bg-[#000] relative overflow-hidden w-full  ">
@@ -49,12 +62,15 @@ const Home = () => {
                   // onClick={handleDemoLogin}
                   className="group px-6 sm:px-8 py-3 sm:py-4 bg-white text-black font-semibold rounded-2xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl w-full sm:w-auto"
                 >
-                  <Link href={"/chat"}>
-                    <span className="flex items-center justify-center gap-2">
-                      Try Demo
-                      <IoIosArrowDroprightCircle className="text-lg sm:text-xl group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </Link>
+                  {/* <Link href={"/chat"}> */}
+                  <span
+                    onClick={() => dispatch(demoLogin())}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    Try Demo
+                    <IoIosArrowDroprightCircle className="text-lg sm:text-xl group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  {/* </Link> */}
                 </button>
 
                 <button

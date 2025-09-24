@@ -21,57 +21,59 @@ import {
 } from "@/reduxStore/slices/Message"
 import {RxCross1} from "react-icons/rx"
 import SkeletonLoader from "./skeleton/ImageSkeleton"
-// const socket = io("http://localhost:5001")
-let socket: any = null
-const ChatMain = ({setShow}: any) => {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
-  const user = useAppSelector(state => state.authReducer.user)
-  console.log("🔥 ChatMain function ran, user:", user)
-  const dispatch = useAppDispatch()
-  const [typingIndicator, setTypingIndicator] = useState("")
-  // console.log(typingIndicator)
-  const [isTyping, setIsTyping] = useState(false)
-  const typingTimeoutRef = useRef<any>(null)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+import {
+  generate_previous_chat,
+  generate_socket_connection,
+  join_rooom,
+  leave_rooom,
+  socket,
+} from "./socket/socketManager"
 
-  // console.log(messages)
+// const socket = io("http://localhost:5001")
+// let socket: any = null
+const ChatMain = ({setShow}: any) => {
+  // Here is the porper structure of the sockets how things are happening
+
+  //sabse pehle all usestate
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth)
+  const [typingIndicator, setTypingIndicator] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [newMessage, setNewMessage] = useState("")
   const [emoji, setEmoji] = useState<string[]>([]) // keep history if you want
   const [loading, setLoding] = useState(false)
+  const [onlineFriends, setOnlineFriends] = useState<string[] | string>([])
+  const [typingUsers, setTypingUsers] = useState<string[]>([])
   const state = useAppSelector(state => state.friendSliceAuth.getFriendsData)
   const active = useAppSelector(state => state.dashBoardReducer.activeTab)
   const [isAuthReady, setIsAuthReady] = useState(false)
   const isnull = state?.some(e => e.id === null)
   const chatPerson = useAppSelector(state => state.messageReducer.chat)
-  console.log(chatPerson)
-
-  console.log(user)
-  //new state
-  const [onlineFriends, setOnlineFriends] = useState<string[] | string>([])
-  const [typingUsers, setTypingUsers] = useState<string[]>([])
-
-  const [preview, setPreview] = useState<string | null>(null)
-  const [image, setImage] = useState(null)
   const [skeletonImage, setSkeletonImage] = useState(false)
   const [currentRoom, setCurrentRoom] = useState(null)
-  console.log("PANATPAN", onlineFriends, typingUsers)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [image, setImage] = useState(null)
 
+  //the useref
+  const typingTimeoutRef = useRef<any>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // then we will write all the state coming from redux
+  const user = useAppSelector(state => state.authReducer.user)
   const messages = useAppSelector(state => state.messageReducer.message)
-  console.log(messages)
-
-  // console.log(chatPerson)
   const currentUserId = useAppSelector(state => state.authReducer.user)
 
-  console.log(currentUserId?.id)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  // then we will write the dispatchcustom hook
+  const dispatch = useAppDispatch()
+
+  // then we will write the scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({behavior: "smooth"})
   }
 
-  useEffect(() => {
-    console.log("🔥 useEffect mounted, user.id:", user?.id)
-  }, [user?.id])
+  // ab dekho we write all state the redux state and necessary things which we will need when componenet will run
 
+  // okay this is just checking is there an user if user then checging the isauthready
   useEffect(() => {
     console.log("Auth state check:", {
       user: user?.id,
@@ -90,87 +92,31 @@ const ChatMain = ({setShow}: any) => {
       }
     }
   }, [user?.id, currentUserId?.id, isAuthReady])
+
   // socket connection
-
-  // Replace your current socket initialization useEffect with this:
   useEffect(() => {
-    console.log("use effect for previous is called ")
     if (user?.id) {
-      console.log("Initializing socket connection for user:", user.id)
-
-      // Disconnect existing socket if any
-      if (socket) { 
-        socket.disconnect()
-      }
-
-      socket = io(process.env.NEXT_PUBLIC_Backend_Url, {
-        transports: ["websocket"],
-        autoConnect: true,
-      })
-
-      socket.on("connect", () => {
-        console.log("Socket connected, emitting user_online")
-        socket.emit("user_online", user.id)
-
-        // Load previous chat if we have the necessary data
-        if (chatPerson?.roomId && currentUserId?.id) {
-          socket.emit("join_room", chatPerson.roomId)
-          setCurrentRoom(chatPerson.roomId)
-          dispatch(
-            loadPriviousChat({
-              roomId: chatPerson.roomId,
-              currentId: currentUserId?.id,
-            })
-          )
-        }
-      })
-
-      socket.on("disconnect", () => {
-        console.log("Socket disconnected")
-      })
+      generate_socket_connection(user.id)
     }
+  }, [user?.id])
+  //after connection join a room and load previous chat
+  useEffect(() => {
+    if (!chatPerson?.roomId || !user?.id) return
+    if (currentRoom && currentRoom !== chatPerson.roomId) {
+      leave_rooom(currentRoom)
+    }
+    join_rooom(chatPerson.roomId)
+    setCurrentRoom(chatPerson.roomId)
+
+    generate_previous_chat(dispatch, chatPerson.roomId, user.id)
 
     return () => {
-      if (socket) {
-        socket.disconnect()
-        socket = null
+      if (chatPerson?.roomId) {
+        leave_rooom(chatPerson.roomId)
       }
     }
-  }, [currentUserId]) // Only depend on user.id
-  // Replace your room management useEffect with this:
-  useEffect(() => {
-    if (
-      !socket ||
-      !socket.connected ||
-      !chatPerson?.roomId ||
-      !currentUserId?.id
-    ) {
-      return
-    }
+  }, [chatPerson?.roomId, user?.id])
 
-    const joinRoom = async () => {
-      // Leave previous room if exists
-      if (currentRoom && currentRoom !== chatPerson.roomId) {
-        socket.emit("leave_room", currentRoom)
-        console.log("Left room:", currentRoom)
-      }
-
-      // Join new room
-      socket.emit("join_room", chatPerson.roomId)
-      setCurrentRoom(chatPerson.roomId)
-      console.log("Joined room:", chatPerson.roomId)
-
-      // Load previous chat messages
-      dispatch(
-        loadPriviousChat({
-          roomId: chatPerson.roomId,
-          currentId: currentUserId?.id,
-        })
-      )
-    }
-
-    joinRoom()
-  }, [chatPerson?.roomId, currentUserId?.id, socket?.connected, user?.id])
   useEffect(() => {
     const hasAuth = user?.id && currentUserId?.id
     if (hasAuth && !isAuthReady && socket?.connected) {

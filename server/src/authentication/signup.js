@@ -40,46 +40,43 @@ const signup = async (req, res) => {
 
   const {email, password, name} = req.body
   const image = req.file
-  console.log(email, password, name, image)
-  if (!email || !password || !name)
-    return res.send({error: "Please fill all the coloumn"})
+
+  if (!email || !password || !name) {
+    return res.status(400).json({error: "Please fill all the columns"})
+  }
 
   try {
+    // Check if the email is already registered
     const isAlreadyRegistered = await prisma.user.findFirst({
       where: {email},
     })
+
     if (isAlreadyRegistered) {
-      return res.status(401).json({
-        message: "user is already registed with this email",
+      return res.status(409).json({
+        // Use 409 for conflict
+        message: "User is already registered with this email",
         email: false,
       })
     }
-    // const isUserNameTaken = await prisma.user.findFirst({
-    //   where: {name},
-    // })
-    // if (isUserNameTaken) {
-    //   return res.status(401).json({
-    //     message: "user is already taken with this username ",
-    //     username: false,
-    //   })
-    // }
+
     const hashedpassword = await passwordHasher(password)
-    // const hashedpassword = await bcrypt.hash(password, 12)
-    const profileImage = await cloudinary.uploader.upload(req.file.path, {
-      folder: "whatsapps_Profile",
-      resource_type: "image",
-    })
+    let profileImage = {secure_url: ""}
+
+    if (image) {
+      profileImage = await cloudinary.uploader.upload(req.file.path, {
+        folder: "whatsapps_Profile",
+        resource_type: "image",
+      })
+    }
 
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedpassword,
         name,
-        userImage: profileImage.secure_url,
+        userImage: profileImage.secure_url || "",
       },
     })
-
-    console.log("data added")
 
     const token = jwtTokenCreator({
       id: user.id,
@@ -87,27 +84,32 @@ const signup = async (req, res) => {
       email: user.email,
       userImage: user.userImage,
     })
+
     res.cookie("authToken", token, {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 24 * 7,
     })
-    res.status(200).json({
+
+    res.status(201).json({
       message: "User registered successfully",
       user,
-      username: true,
-      email: true,
-      userImage: profileImage.secure_url,
+      success: true,
     })
   } catch (error) {
-    res.status(500).json({message: "data Not added", error})
-    console.log("error while puting data in it", error)
+    console.log("Error while putting data:", error)
+    res
+      .status(500)
+      .json({message: "Internal server error", error: error.message})
   }
 }
 
 const login = async (req, res) => {
   const {email, password} = req.body
   if (!email || !password)
-    return res.send({error: "Please add both email and password"})
+    return res.send({
+      message: "Please add both email and password",
+      isError: true,
+    })
 
   try {
     const user = await prisma.user.findFirst({
@@ -115,7 +117,8 @@ const login = async (req, res) => {
     })
     if (!user) {
       return res.status(401).json({
-        message: "user is Not registed please register",
+        message: "User is not registed",
+        isError: true,
         email: false,
       })
     }

@@ -12,6 +12,7 @@ const {
   getAllRequestReciver,
   controlFriendRequestReciver,
   getFriendList,
+  controlDecision,
 } = require("../controllers/FriendRequest")
 const {
   sendMessage,
@@ -54,6 +55,7 @@ router.post(
   jwtMiddlerware,
   controlFriendRequestReciver
 )
+router.post("/user_decision", jwtMiddlerware, controlDecision)
 
 //friends get
 router.get("/getfriends", jwtMiddlerware, getFriendList)

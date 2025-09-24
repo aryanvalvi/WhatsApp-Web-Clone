@@ -28,6 +28,7 @@ model FriendRequest {
   id         String              @id @default(cuid())
   status     FriendRequestStatus @default(PENDING) // ✅ Added status enum
   senderId   String
+  seen       Seenenum            @default(notseen)
   receiverId String
   sender     User                @relation("RequestSender", fields: [senderId], references: [id])
   receiver   User                @relation("RequestReceiver", fields: [receiverId], references: [id])
@@ -41,9 +42,6 @@ model Friendship {
 
   user1Id String
   user2Id String
-
-  // Note: We'll need to handle this relationship carefully
-  // to avoid circular references
 
   createdAt DateTime @default(now())
 
@@ -92,6 +90,11 @@ enum FriendRequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+enum Seenenum {
+  seen
+  notseen
 }
 
 enum Role {

@@ -1,86 +1,5 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit"
 
-// const requests = [
-//   {
-//     createdAt: null,
-//     id: null,
-//     sender: {
-//       email: null,
-//       id: null,
-//       name: null,
-//     },
-//   },
-// ]
-// const sendRequest = [
-//   {
-//     createdAt: null,
-//     id: null,
-//     receiver: {
-//       email: null,
-//       id: null,
-//       name: null,
-//     },
-//   },
-// ]
-
-// const getFriendsData = [
-//   {
-//     id: null,
-//     name: null,
-//     email: null,
-//     roomId: null,
-
-//     lastMessage: null,
-//     lastMessageAt: null,
-//     lastMessageRead: null,
-
-//     roomCreatedAt: null,
-
-//     unreadCount: null,
-//     userImage: null,
-//   },
-// ]
-// const getGroups = [
-//   {
-//     group: true,
-//     bruhh: "",
-//     id: "",
-//     name: "",
-//     Des: "",
-//     createdAt: "",
-//     participants: [
-//       {
-//         id: "",
-//         userId: "",
-//         roomId: "",
-//         role: "",
-//         joinedAt: "",
-//         user: {
-//           id: "",
-//           name: "",
-//           email: "",
-//           userImage: "",
-//         },
-//       },
-//     ],
-//   },
-// ]
-// const initialState = {
-//   requestCount: null,
-//   sendRequestCount: 0,
-//   deletedReq: null,
-//   requests,
-//   sendRequest,
-//   message: null,
-//   reredner: false,
-//   sendRequestSuccess: null,
-//   withdrawRequestSuccess: null,
-//   controlRequestSuccess: null,
-//   getFriendsDataSuccess: null,
-//   getFriendsData,
-//   getGroups,
-// }
-// Types
 type User = {
   id: string | null
   name: string | null
@@ -142,6 +61,8 @@ type State = {
   withdrawRequestSuccess: boolean | null
   controlRequestSuccess: boolean | null
   getFriendsDataSuccess: boolean | null
+  decison: null
+  decisonFlag: null | ""
 }
 
 // Initial state
@@ -159,6 +80,8 @@ const initialState: State = {
   getFriendsDataSuccess: null,
   getFriendsData: [],
   getGroups: [],
+  decison: null,
+  decisonFlag: null,
 }
 export const sendFriendRequest = createAsyncThunk(
   "sendFriendReq",
@@ -180,7 +103,7 @@ export const sendFriendRequest = createAsyncThunk(
       // await dispatch(getAllFriendRequest())
       // await dispatch(getAllRequest())
       // console.log(data)
-      console.log("freind request send kardi")
+      console.log("freind request send kardi", data)
       return data
     } catch (error) {
       console.log(error)
@@ -199,8 +122,8 @@ export const getAllRequestt = createAsyncThunk("getAllRequest", async () => {
       }
     )
     const data = await res.json()
-    // console.log(data)
-    console.log("get all request ka data mila")
+    console.log(data)
+    console.log("get all request ka data mila", data)
     return data
   } catch (error) {
     console.log(error)
@@ -209,7 +132,7 @@ export const getAllRequestt = createAsyncThunk("getAllRequest", async () => {
 export const getAllFriendRequestt = createAsyncThunk(
   "getallfriendsreq",
   async () => {
-    console.log("get all friend request called")
+    console.log("🔍 API call started at:", new Date().toISOString())
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_Backend_Url}/pending_request_reciever_end`,
@@ -220,7 +143,9 @@ export const getAllFriendRequestt = createAsyncThunk(
       )
       const data = await res.json()
       // console.log(data)
-      console.log("get all friend request ka data mila")
+      console.log("📊 API call completed at:", new Date().toISOString())
+
+      console.log("get all friend request ka data mila", data)
       return data
     } catch (error) {
       console.log(error)
@@ -277,9 +202,13 @@ export const controlRequest = createAsyncThunk(
           body: JSON.stringify({manipulateId, Decision}),
         }
       )
-      // dispatch(getAllFriendRequest())
-      // dispatch(getAllRequest())
-    } catch (error) {}
+      const data = await res.json()
+      console.log("controlRequest response:", data) // ← Debug log
+      return data
+    } catch (error) {
+      console.log("controlRequest error:", error)
+      throw error
+    }
   }
 )
 export const getFriends = createAsyncThunk("getallFriends", async () => {
@@ -299,12 +228,49 @@ export const getFriends = createAsyncThunk("getallFriends", async () => {
   }
 })
 
+export const requestDecisionFromUser = createAsyncThunk(
+  "reqDec",
+  async ({Decision}: {Decision: string}) => {
+    try {
+      const res = await fetch("http://localhost:5001/user_decision", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({Decision}),
+      })
+      const data = await res.json()
+      console.log("data from request decison from user", data)
+      return data
+    } catch (error) {
+      console.log(error)
+    }
+  }
+)
+
 const friendSlice = createSlice({
   name: "friendSlice",
   initialState,
   reducers: {
     setRefresh: (state, action) => {
       state.reredner = action.payload
+    },
+    addNewRequest: (state, action) => {
+      state.requests.push(action.payload)
+      state.requestCount = (state.requestCount || 0) + 1
+    },
+    removeSentRequest: (state, action) => {
+      const requestId = action.payload
+      if (requestId) {
+        state.sendRequest = state.sendRequest.filter(
+          req => req.id !== requestId
+        )
+        state.sendRequestCount = state.sendRequest.length
+      } else {
+        state.sendRequest = []
+        state.sendRequestCount = 0
+      }
     },
   },
   extraReducers: builder => {
@@ -329,8 +295,20 @@ const friendSlice = createSlice({
       state.getFriendsData = action.payload.friendsDetail
       state.getGroups = action.payload.groups
     })
+    builder.addCase(controlRequest.fulfilled, (state, action) => {
+      state.controlRequestSuccess = action.payload?.success || false
+      state.message = action.payload?.message
+      const requestId = action.meta.arg.manipulateId
+      state.requests = state.requests.filter(req => req.id !== requestId)
+      state.requestCount = state.requests.length
+    })
+    builder.addCase(requestDecisionFromUser.fulfilled, (state, action) => {
+      state.decison = action.payload
+      state.decisonFlag = action.payload
+    })
   },
 })
 
 export const friendSliceAuth = friendSlice.reducer
-export const {setRefresh} = friendSlice.actions
+export const {setRefresh, addNewRequest, removeSentRequest} =
+  friendSlice.actions

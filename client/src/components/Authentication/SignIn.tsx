@@ -17,7 +17,7 @@ const SignIn = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
   // const [success, setSuccess] = useState(false)
   const [loopingMessage, setLoopingMessage] = useState("")
   const [loader, setLoader] = useState(false)
-  const [localError, setLocalerror] = useState({
+  const [localError, setLocalerror] = useState<any>({
     name: "",
     error: "",
   })
@@ -26,6 +26,7 @@ const SignIn = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
 
   const dispatch = useAppDispatch()
   const state = useAppSelector(state => state.authReducer)
+  console.log(state)
 
   const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/
   const isValidEmail = (value: any) => emailRegex.test(value)
@@ -37,7 +38,10 @@ const SignIn = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
     e.preventDefault()
     setLoader(true)
     if (!isValidEmail(email)) {
-      return setLocalerror({name: "email", error: "Please enter valid email"})
+      return (
+        setLocalerror({name: "email", error: "Please enter valid email"}),
+        setLoader(false)
+      )
     }
 
     // setSuccess(true)
@@ -47,9 +51,15 @@ const SignIn = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
   }
 
   useEffect(() => {
-    if (state.user) {
+    if (state.isError) {
+      setLocalerror({error: state.message})
       setLoader(false)
+    }
+  }, [state])
+  useEffect(() => {
+    if (state.user) {
       router.push("/chat")
+      setLoader(false)
     }
   }, [state])
 
@@ -105,8 +115,9 @@ const SignIn = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
           </div>
 
           <p className="text-sm text-red-800 ml-2">
-            {state.error ? state.error : ""}
+            {/* {state.error ? state.error : ""} */}
             {localError.error}
+            {/* {state.isError === true ? state.message : null} */}
           </p>
 
           <button

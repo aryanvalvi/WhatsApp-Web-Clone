@@ -2,7 +2,7 @@ const {PrismaClient, Prisma} = require("@prisma/client")
 const prisma = new PrismaClient()
 //working fine
 const sendFriendRequest = async (req, res) => {
-  // console.log("send called")
+  console.log("send called")
   // const userId = "cmeuy2kza0000ujjpq45in5vb"
   // const {recirverID} = req.body
 
@@ -13,9 +13,11 @@ const sendFriendRequest = async (req, res) => {
   const {emailid} = req.body
   // console.log(emailid)
   if (!emailid) {
+    console.log("email is required")
     return res.status(400).json({error: "email is required"})
   }
   if (user.email === emailid) {
+    console.log("Cannot send friend request to yourself")
     return res
       .status(400)
       .json({error: "Cannot send friend request to yourself"})
@@ -26,6 +28,7 @@ const sendFriendRequest = async (req, res) => {
     },
   })
   if (!thatUser) {
+    console.log("User is not not register in convexel")
     return res
       .status(404)
       .json({message: "User is not not register in convexel"})
@@ -42,6 +45,7 @@ const sendFriendRequest = async (req, res) => {
       },
     })
     if (existingFriends) {
+      console.log("you are already a friend")
       return res.status(400).json({error: "you are already a friend"})
     }
     // console.log(existingFriends)
@@ -58,10 +62,10 @@ const sendFriendRequest = async (req, res) => {
             receiverId: userid,
           },
         ],
-        status: "PENDING",
       },
     })
     if (isalreadySendRequest) {
+      console.log("you already sent an request to this user")
       return res
         .status(400)
         .json({error: "you already sent an request to this user"})
@@ -72,8 +76,51 @@ const sendFriendRequest = async (req, res) => {
         senderId: userid,
         receiverId: requestedUserID,
         status: "PENDING",
+        seen: "notseen",
       },
     })
+
+    console.log(
+      "✅ Database write completed at:",
+      new Date().toISOString(),
+      newFriendRequest
+    )
+    const recipeint = await prisma.user.findFirst({
+      where: {
+        email: emailid,
+      },
+    })
+
+    const io = req.io
+    const onlineUserMap = req.app.get("onlineUser")
+    const recipientSocketId = onlineUserMap.get(recipeint.id)
+    console.log(
+      "recipient is ",
+      recipeint,
+      "onlineusermap",
+      onlineUserMap,
+      "recipeintsocketId",
+      recipientSocketId
+    )
+    if (recipientSocketId) {
+      console.log("📤 Emitting socket event at:", new Date().toISOString())
+      io.to(recipientSocketId).emit("friend_request_recieve", {
+        fromUserId: userid,
+        fromUserName: user.name,
+        fromUserImage: user.userImage,
+        requestId: newFriendRequest.id,
+        newRequest: {
+          id: newFriendRequest.id,
+          createdAt: newFriendRequest.createdAt,
+          sender: {
+            id: userid,
+            name: user.name,
+            email: user.email,
+            userImage: user.userImage,
+          },
+        },
+      })
+    }
     // console.log("request send succcessfully")
     return res.status(200).json({
       message: "Friend request sent successfully",
@@ -183,6 +230,7 @@ const getAllRequestReciver = async (req, res) => {
             id: true,
             name: true,
             email: true,
+            userImage: true,
           },
         },
       },
@@ -241,6 +289,16 @@ const controlFriendRequestReciver = async (req, res) => {
       return res.status(400).json({error: "Request has already been processed"})
     }
 
+    const io = req.io
+    const onlineUserMap = req.app.get("onlineUser")
+    const recipientSocketId = onlineUserMap.get(isThere.senderId)
+    console.log("gublin", recipientSocketId, onlineUserMap)
+    io.to(recipientSocketId).emit("friend_request_decided", {
+      decidedByName: user.name,
+      Decision,
+      requestId: manipulateId,
+    })
+
     if (Decision === "ACCEPTED") {
       const friendship = await prisma.friendship.createMany({
         data: {
@@ -266,8 +324,10 @@ const controlFriendRequestReciver = async (req, res) => {
           },
         },
       })
+
       return res.status(200).json({
         message: "Request accepted",
+        success: true,
         request: updateRequest,
         room: createRoom,
       })
@@ -280,11 +340,20 @@ const controlFriendRequestReciver = async (req, res) => {
           status: "REJECTED",
         },
       })
-      return req
-        .status(200)
-        .json({message: "Request Rejected", request: updateRequest})
+      return res.status(200).json({
+        message: "Request Rejected",
+        success: true,
+        request: updateRequest,
+      })
     }
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      message: "Server error",
+      success: false,
+      error,
+    })
+  }
 }
 const getFriendList = async (req, res) => {
   // console.log("getFriendList called")
@@ -421,6 +490,18 @@ const getFriendList = async (req, res) => {
   }
 }
 
+const controlDecision = (req, res) => {
+  const Decision = req.body
+  try {
+    if (Decision === "accepted") {
+      res.status(200).json({decison: true, decisonFlag: "request accepted"})
+    }
+    res.status(200).json({decison: true, decisonFlag: "request rejected"})
+  } catch (error) {
+    res.status(500).json({decison: false})
+  }
+}
+
 module.exports = {
   sendFriendRequest,
   controlFriendRequestReciver,
@@ -429,4 +510,5 @@ module.exports = {
   controlFriendRequestSender,
   getAllRequestReciver,
   getFriendList,
+  controlDecision,
 }

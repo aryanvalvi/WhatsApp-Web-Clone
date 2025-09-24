@@ -13,16 +13,30 @@ import {
 import {formatDistanceToNow} from "date-fns"
 import {
   controlRequest,
+  getAllFriendRequestt,
+  getAllRequestt,
+  getFriends,
+  removeSentRequest,
+  requestDecisionFromUser,
   widrawSentRequest,
 } from "@/reduxStore/slices/FriendSlice"
+import Image from "next/image"
+import {generate_socket_connection, socket} from "../socket/socketManager"
 
 const Notification = () => {
+  const {decison, decisonFlag} = useAppSelector(state => state.friendSliceAuth)
   const state = useAppSelector(state => state.friendSliceAuth.requests)
   const state2 = useAppSelector(state => state.friendSliceAuth.sendRequest)
-  const {requestCount, sendRequestCount} = useAppSelector(
-    state => state.friendSliceAuth
-  )
-  const image = "/girl/bro1.jpg"
+  const user = useAppSelector(state => state.authReducer.user)
+  const [socketReady, setSocketReady] = useState(false)
+  const [isUserDecied, setIsUserDecide] = useState(null)
+  const {
+    requestCount,
+    sendRequestCount,
+    withdrawRequestSuccess,
+    controlRequestSuccess,
+  } = useAppSelector(state => state.friendSliceAuth)
+
   const stateIsThere = state[0]?.sender?.id || null
   const stateIsThere2 = state2[0]?.receiver?.id || null
 
@@ -67,9 +81,50 @@ const Notification = () => {
   const [activeTab, setActiveTab] = useState("incoming")
   const [isOpen, setIsOpen] = useState(false)
 
+  useEffect(() => {
+    // first render guard
+    if (user?.id) {
+      generate_socket_connection(user.id)
+    }
+    const checkConnection = setInterval(() => {
+      if (socket && socket.connected) {
+        setSocketReady(true)
+        clearInterval(checkConnection)
+      }
+    }, 100)
+    return () => clearInterval(checkConnection)
+  }, [user?.id])
+  useEffect(() => {
+    if (!socketReady || !socket) return
+    const handleDecisionMade = (data: any) => {
+      console.log("new friend req", data)
+      setIsUserDecide(data)
+      if (data) {
+        dispatch(removeSentRequest(data.requestId))
+      }
+      if (data.Decision === "ACCEPTED") {
+        console.log(
+          `${data.decidedByName || "User"} accepted your friend request!`
+        )
+      } else {
+        console.log(
+          `${data.decidedByName || "User"} declined your friend request.`
+        )
+      }
+      dispatch(getFriends())
+      dispatch(getAllFriendRequestt())
+      dispatch(getAllRequestt())
+    }
+    socket.on("friend_request_decided", handleDecisionMade)
+    return () => {
+      socket.off("friend_request_decided", handleDecisionMade)
+    }
+  }, [socketReady, dispatch])
   // Handle accepting incoming requests
   const handleAcceptRequest = (requestId: string | any) => {
     dispatch(controlRequest({manipulateId: requestId, Decision: "ACCEPTED"}))
+    dispatch(requestDecisionFromUser({Decision: "accepted"}))
+
     // setIncomingRequests(prev => prev.filter(req => req.id !== requestId))
     // You would typically make an API call here
     console.log(`Accepted connection request from ID: ${requestId}`)
@@ -78,7 +133,7 @@ const Notification = () => {
   // Handle declining incoming requests
   const handleDeclineRequest = (requestId: string | any) => {
     dispatch(controlRequest({manipulateId: requestId, Decision: "REJECTED"}))
-
+    dispatch(requestDecisionFromUser({Decision: "rejected"}))
     // setIncomingRequests(prev => prev.filter(req => req.id !== requestId))
     // You would typically make an API call here
     console.log(`Declined connection request from ID: ${requestId}`)
@@ -93,7 +148,28 @@ const Notification = () => {
   }
 
   // const totalNotifications = incomingRequests.length + outgoingRequests.length
-  useEffect(() => {}, [state, state2])
+  useEffect(() => {
+    console.log("Success states changed:", {
+      controlRequestSuccess,
+      withdrawRequestSuccess,
+    })
+  })
+  useEffect(() => {
+    if (decisonFlag) {
+      console.log(decison, decisonFlag)
+
+      dispatch(getFriends())
+      dispatch(getAllFriendRequestt())
+      dispatch(getAllRequestt())
+    }
+  }, [decison])
+  useEffect(() => {
+    if (controlRequestSuccess || withdrawRequestSuccess) {
+      dispatch(getFriends())
+      dispatch(getAllFriendRequestt())
+      dispatch(getAllRequestt())
+    }
+  }, [controlRequestSuccess, withdrawRequestSuccess, dispatch])
   return (
     // <div className="relative z-10">
     //   <div className=" mb-8 w-full ">
@@ -168,12 +244,10 @@ const Notification = () => {
                           key={request.id}
                           className="flex items-start space-x-3 p-3 rounded-lg hover:bg-neutral-600 transition-colors duration-200"
                         >
-                          <img
-                            src={
-                              request.sender.image ||
-                              image ||
-                              "/images/user.svg"
-                            }
+                          <Image
+                            src={request.sender.userImage || "/images/user.svg"}
+                            height={100}
+                            width={100}
                             alt={request.sender.name || ""}
                             className="w-12 h-12 rounded-full object-cover"
                           />
@@ -239,10 +313,10 @@ const Notification = () => {
                           className="flex items-start space-x-3 p-3 rounded-lg hover:bg-neutral-600  transition-colors duration-200"
                         >
                           <img
-                            src={request.receiver.image || image}
-                            alt={
-                              request.receiver.name || "" || "/images/user.svg"
+                            src={
+                              request.receiver.userImage || "/images/user.svg"
                             }
+                            alt={request.receiver.name || ""}
                             className="w-12 h-12 rounded-full object-cover"
                           />
                           <div className="flex-1 min-w-0">

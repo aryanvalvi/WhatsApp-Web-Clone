@@ -15,6 +15,7 @@ type AuthState = {
   error: string | null
   message: string | null
   success: boolean | null
+  isError: boolean | null
 }
 
 const initialState: AuthState = {
@@ -23,6 +24,7 @@ const initialState: AuthState = {
   error: null,
   message: null,
   success: null,
+  isError: null,
 }
 
 export const verificationEmail = createAsyncThunk(
@@ -89,6 +91,26 @@ export const registerFunction = createAsyncThunk(
   }
 )
 
+export const demoLogin = createAsyncThunk("auth/demo", async () => {
+  try {
+    const email = "demo@gmail.com"
+    const password = "1234"
+    const res = await fetch(`${process.env.NEXT_PUBLIC_Backend_Url}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({email, password}),
+    })
+
+    const data = await res.json()
+    console.log("login", data)
+    return data
+  } catch (error) {
+    throw error
+  }
+})
 // Login function
 export const loginFunction = createAsyncThunk(
   "auth/login",
@@ -189,6 +211,7 @@ const authSlice = createSlice({
         state.user = action.payload.user
         state.message = action.payload.message
         state.error = action.payload.error
+        state.isError = action.payload.isError
       })
       .addCase(loginFunction.rejected, (state, action) => {
         state.loading = false
@@ -214,6 +237,13 @@ const authSlice = createSlice({
     builder.addCase(verificationEmail.fulfilled, (state, action) => {
       state.success = action.payload.success
       state.error = action.payload.error
+    })
+    builder.addCase(demoLogin.fulfilled, (state, action) => {
+      state.loading = false
+      state.user = action.payload.user
+      state.message = action.payload.message
+      state.error = action.payload.error
+      state.isError = action.payload.isError
     })
   },
 })

@@ -12,15 +12,16 @@ require("dotenv").config()
 
 app.use(
   cors({
-    // origin: "http://localhost:3000",
-    origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
+    origin: "http://localhost:3000",
+    // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
   })
 )
 const io = new Server(server, {
   cors: {
-    origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
+    origin: "http://localhost:3000",
+    // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -141,6 +142,7 @@ io.on("connection", socket => {
       const onlineFriends = friendsIds.filter(friendId =>
         onlineUser.has(friendId)
       )
+      console.log("online friends are", onlineFriends)
 
       if (onlineFriends.length > 0) {
         socket.emit("friends_online_list", onlineFriends)
