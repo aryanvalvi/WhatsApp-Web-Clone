@@ -93,8 +93,8 @@ export const registerFunction = createAsyncThunk(
 
 export const demoLogin = createAsyncThunk("auth/demo", async () => {
   try {
-    const email = "demo@gmail.com"
-    const password = "1234"
+    const email = "demo@convexle.com"
+    const password = "demo123"
     const res = await fetch(`${process.env.NEXT_PUBLIC_Backend_Url}/login`, {
       method: "POST",
       headers: {
