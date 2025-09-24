@@ -12,16 +12,16 @@ require("dotenv").config()
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
-    // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
+    // origin: "http://localhost:3000",
+    origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
   })
 )
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
-    // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
+    // origin: "http://localhost:3000",
+    origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
   },
