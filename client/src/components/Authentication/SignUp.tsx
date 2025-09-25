@@ -277,13 +277,13 @@ const SignUp = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
               </div>
 
               {/* Google Login Button */}
-              <button
+              {/* <button
                 onClick={handleGoogleLogin}
                 className="w-full py-3 sm:py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-3 text-sm sm:text-base"
               >
                 <RiGoogleFill className="text-lg sm:text-xl" />
                 Continue with Google
-              </button>
+              </button> */}
 
               {/* Sign In Link */}
               <div className="mt-4 sm:mt-6 text-center">

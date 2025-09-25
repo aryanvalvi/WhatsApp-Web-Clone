@@ -157,13 +157,13 @@ const SignIn = ({setShowLogin, setShowSignUp}: AuthWrapperProps) => {
           <div className="flex-1 h-px bg-white/20"></div>
         </div>
 
-        <button
+        {/* <button
           onClick={handleGoogleLogin}
           className="w-full py-3 sm:py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-3 text-sm sm:text-base"
         >
           <RiGoogleFill className="text-lg sm:text-xl" />
           Continue with Google
-        </button>
+        </button> */}
 
         <div className="mt-4 sm:mt-6 text-center">
           <button
