@@ -6,7 +6,7 @@ import {dashBoardReducer} from "../slices/DashboardSlice"
 import {friendSliceAuth} from "../slices/FriendSlice"
 import {groupSlice} from "../slices/GroupSlice"
 import {ProfileSliceReducer} from "../slices/Profile"
-import {OnlineUserReducer} from "../slices/onlineUsers"
+import {OnlineUserReducer} from "../slices/OnlineUsers"
 
 export const store = configureStore({
   reducer: {

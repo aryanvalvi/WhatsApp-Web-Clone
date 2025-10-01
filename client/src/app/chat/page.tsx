@@ -15,7 +15,8 @@ import {
   addUserOnline,
   removeOnlineFriend,
   setOnlineUsersList,
-} from "@/reduxStore/slices/onlineUsers"
+} from "@/reduxStore/slices/OnlineUsers"
+
 import React, {useEffect, useState} from "react"
 
 const page = () => {
