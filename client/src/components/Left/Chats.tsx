@@ -13,14 +13,18 @@ import {IoMdSearch} from "react-icons/io"
 import {MdOutlinePersonAddAlt} from "react-icons/md"
 import {io} from "socket.io-client"
 import SearchResult from "./HelperFunctions/SearchResult"
+import {socket} from "../socket/socketManager"
 // const socket = io(process.env.NEXT_PUBLIC_Backend_Url)
-import {socket} from "../socket/socket"
+
 const Chats = ({setShow}: any) => {
+  if (!socket) {
+    return null
+  }
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const [onClickSearch, setOnClickSearch] = useState(false)
   const [searchValue, setSearchValue] = useState("")
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
-  console.log(onlineUsers)
+  const onlineusers = useAppSelector(state => state.OnlineUserReducer)
+
   const {unReadMessage} = useAppSelector(state => state.messageReducer)
   const {getFriendsData, getGroups} = useAppSelector(
     getFriendsData => getFriendsData.friendSliceAuth
@@ -100,36 +104,35 @@ const Chats = ({setShow}: any) => {
   useEffect(() => {
     dispatch(getCounts())
   }, [user, dispatch])
-  useEffect(() => {
-    if (!user?.id) return
+  // useEffect(() => {
+  //   if (!user?.id) return
 
-    socket.emit("user_online", user.id)
-    const handleFriendsOnline = (id: string) => {
-      console.log(id + "is online")
-      setOnlineUsers(prev => {
-        if (prev.includes(id)) return prev
-        return [...prev, id]
-      })
-    }
-    const handleFriendsOffline = (id: string) => {
-      console.log(id + "is offline")
-      setOnlineUsers(prev => prev.filter(userid => userid !== id))
-    }
-    // Handle initial list of online friends
-    const handleFriendsOnlineList = (onlineFriendsIds: string[]) => {
-      console.log("Initial online friends:", onlineFriendsIds)
-      setOnlineUsers(onlineFriendsIds)
-    }
-
-    socket.on("friend_online", handleFriendsOnline)
-    socket.on("friend_offline", handleFriendsOffline)
-    socket.on("friends_online_list", handleFriendsOnlineList)
-    return () => {
-      socket.off("friend_online", handleFriendsOnline)
-      socket.off("friend_offline", handleFriendsOffline)
-      socket.off("friends_online_list", handleFriendsOnlineList)
-    }
-  }, [user?.id])
+  //   const handleFriendsOnline = (id: string) => {
+  //     console.log("handleFriendsOnline called")
+  //     console.log(id + "is online")
+  //     setOnlineUsers(prev => {
+  //       if (prev.includes(id)) return prev
+  //       return [...prev, id]
+  //     })
+  //   }
+  //   const handleFriendsOffline = (id: string) => {
+  //     console.log(id + "is offline")
+  //     setOnlineUsers(prev => prev.filter(userid => userid !== id))
+  //   }
+  //   // Handle initial list of online friends
+  //   const handleFriendsOnlineList = (onlineFriendsIds: string[]) => {
+  //     console.log("Initial online friends:", onlineFriendsIds)
+  //     setOnlineUsers(onlineFriendsIds)
+  //   }
+  //   socket.on("friend_online", handleFriendsOnline)
+  //   socket.on("friend_offline", handleFriendsOffline)
+  //   socket.on("friends_online_list", handleFriendsOnlineList)
+  //   return () => {
+  //     socket.off("friend_online", handleFriendsOnline)
+  //     socket.off("friend_offline", handleFriendsOffline)
+  //     socket.off("friends_online_list", handleFriendsOnlineList)
+  //   }
+  // }, [user?.id])
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -179,7 +182,7 @@ const Chats = ({setShow}: any) => {
         <SearchResult
           value={searchValue}
           friends={sortedChats}
-          onlineUsers={onlineUsers}
+          onlineUsers={onlineusers}
           unReadMessage={unReadMessage}
           handleAddPerson={handleAddPerson}
           formatTime={formatTime}
@@ -211,7 +214,7 @@ const Chats = ({setShow}: any) => {
                   .map((p: any) => p.user?.userImage)
                   .splice(0, 2)
               }
-              const isOnline = onlineUsers.includes(person.id)
+              const isOnline = onlineusers.includes(person.id)
               const isUnread = unReadMessage?.find(
                 (e: any) => e.roomid === person.roomId
               )

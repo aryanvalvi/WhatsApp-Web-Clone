@@ -43,6 +43,7 @@ const ChatMain = ({setShow}: any) => {
   const [emoji, setEmoji] = useState<string[]>([]) // keep history if you want
   const [loading, setLoding] = useState(false)
   const [onlineFriends, setOnlineFriends] = useState<string[] | string>([])
+  console.log("online friend", onlineFriends)
   const [typingUsers, setTypingUsers] = useState<string[]>([])
   const state = useAppSelector(state => state.friendSliceAuth.getFriendsData)
   const active = useAppSelector(state => state.dashBoardReducer.activeTab)
@@ -94,11 +95,11 @@ const ChatMain = ({setShow}: any) => {
   }, [user?.id, currentUserId?.id, isAuthReady])
 
   // socket connection
-  useEffect(() => {
-    if (user?.id) {
-      generate_socket_connection(user.id)
-    }
-  }, [user?.id])
+  // useEffect(() => {
+  //   if (user?.id) {
+  //     generate_socket_connection(user.id)
+  //   }
+  // }, [user?.id])
   //after connection join a room and load previous chat
   useEffect(() => {
     if (!chatPerson?.roomId || !user?.id) return

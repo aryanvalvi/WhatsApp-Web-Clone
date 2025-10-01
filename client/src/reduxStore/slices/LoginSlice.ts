@@ -152,7 +152,7 @@ export const authCheckFunction = createAsyncThunk(
       }
 
       const data = await res.json()
-      console.log("auth/check", data)
+      // console.log("auth/check", data)
       return data
     } catch (error) {
       return rejectWithValue((error as Error).message)

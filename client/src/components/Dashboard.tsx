@@ -26,8 +26,8 @@ const Dashboard = ({setShow}: any) => {
   const state = useAppSelector(state => state.authReducer.user)
   const [socketReady, setSocketReady] = useState(false)
   const [newNotification, setNewNotification] = useState()
-  console.log("notificatio is", newNotification)
-  console.log(state)
+  // console.log("notificatio is", newNotification)
+  // console.log(state)
   const success = useAppSelector(
     state => state.friendSliceAuth.sendRequestSuccess
   )
@@ -37,12 +37,12 @@ const Dashboard = ({setShow}: any) => {
   const controlSuccess = useAppSelector(
     state => state.friendSliceAuth.controlRequestSuccess
   )
-  console.log("sucess", success)
+  // console.log("sucess", success)
   const Notification = useAppSelector(state => state.friendSliceAuth)
   const Notification2 = useAppSelector(
     state => state.friendSliceAuth.sendRequestCount
   )
-  console.log(Notification.requestCount, Notification2)
+  // console.log(Notification.requestCount, Notification2)
   // console.log(Notification)
   const dispatch = useAppDispatch()
   const active = useAppSelector(state => state.dashBoardReducer.activeTab)
@@ -51,9 +51,9 @@ const Dashboard = ({setShow}: any) => {
 
   useEffect(() => {
     // first render guard
-    if (state?.id) {
-      generate_socket_connection(state.id)
-    }
+    // if (state?.id) {
+    //   generate_socket_connection(state.id)
+    // }
     const checkConnection = setInterval(() => {
       if (socket && socket.connected) {
         setSocketReady(true)

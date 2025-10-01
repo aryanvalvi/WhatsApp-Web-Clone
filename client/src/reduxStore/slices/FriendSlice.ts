@@ -86,7 +86,7 @@ const initialState: State = {
 export const sendFriendRequest = createAsyncThunk(
   "sendFriendReq",
   async (email: string, {dispatch}) => {
-    console.log(email)
+    // console.log(email)
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_Backend_Url}/sent_friend_Request`,
@@ -103,16 +103,16 @@ export const sendFriendRequest = createAsyncThunk(
       // await dispatch(getAllFriendRequest())
       // await dispatch(getAllRequest())
       // console.log(data)
-      console.log("freind request send kardi", data)
+      // console.log("freind request send kardi", data)
       return data
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
   }
 )
 
 export const getAllRequestt = createAsyncThunk("getAllRequest", async () => {
-  console.log("get all request called ")
+  // console.log("get all request called ")
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_Backend_Url}/pending_request`,
@@ -122,17 +122,17 @@ export const getAllRequestt = createAsyncThunk("getAllRequest", async () => {
       }
     )
     const data = await res.json()
-    console.log(data)
-    console.log("get all request ka data mila", data)
+    // console.log(data)
+    // console.log("get all request ka data mila", data)
     return data
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 })
 export const getAllFriendRequestt = createAsyncThunk(
   "getallfriendsreq",
   async () => {
-    console.log("🔍 API call started at:", new Date().toISOString())
+    // console.log("🔍 API call started at:", new Date().toISOString())
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_Backend_Url}/pending_request_reciever_end`,
@@ -143,12 +143,12 @@ export const getAllFriendRequestt = createAsyncThunk(
       )
       const data = await res.json()
       // console.log(data)
-      console.log("📊 API call completed at:", new Date().toISOString())
+      // console.log("📊 API call completed at:", new Date().toISOString())
 
-      console.log("get all friend request ka data mila", data)
+      // console.log("get all friend request ka data mila", data)
       return data
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
   }
 )
@@ -169,12 +169,12 @@ export const widrawSentRequest = createAsyncThunk(
         }
       )
       const data = await res.json()
-      console.log("lund ke bal", data)
+      // console.log("lund ke bal", data)
       // await dispatch(getAllFriendRequest())
       // await dispatch(getAllRequest())
       return data
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
   }
 )
@@ -203,10 +203,10 @@ export const controlRequest = createAsyncThunk(
         }
       )
       const data = await res.json()
-      console.log("controlRequest response:", data) // ← Debug log
+      // console.log("controlRequest response:", data) // ← Debug log
       return data
     } catch (error) {
-      console.log("controlRequest error:", error)
+      // console.log("controlRequest error:", error)
       throw error
     }
   }
@@ -221,10 +221,10 @@ export const getFriends = createAsyncThunk("getallFriends", async () => {
       }
     )
     const data = await res.json()
-    console.log("data from get freinds", data)
+    // console.log("data from get freinds", data)
     return data
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 })
 
@@ -241,10 +241,10 @@ export const requestDecisionFromUser = createAsyncThunk(
         body: JSON.stringify({Decision}),
       })
       const data = await res.json()
-      console.log("data from request decison from user", data)
+      // console.log("data from request decison from user", data)
       return data
     } catch (error) {
-      console.log(error)
+      // console.log(error)
     }
   }
 )

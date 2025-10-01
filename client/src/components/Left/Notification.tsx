@@ -83,9 +83,9 @@ const Notification = () => {
 
   useEffect(() => {
     // first render guard
-    if (user?.id) {
-      generate_socket_connection(user.id)
-    }
+    // if (user?.id) {
+    //   generate_socket_connection(user.id)
+    // }
     const checkConnection = setInterval(() => {
       if (socket && socket.connected) {
         setSocketReady(true)

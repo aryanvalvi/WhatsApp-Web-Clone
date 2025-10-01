@@ -122,6 +122,7 @@ io.on("connection", socket => {
     // Store the mapping both ways
     onlineUser.set(userId, socket.id)
     userSockets.set(socket.id, userId)
+    console.log("onlineUser are", onlineUser)
     try {
       const friends = await prisma.friendship.findMany({
         where: {

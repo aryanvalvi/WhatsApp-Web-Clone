@@ -3,13 +3,30 @@ import ChatMain from "@/components/ChatMain"
 import Dashboard from "@/components/Dashboard"
 import LeftMain from "@/components/LeftMain"
 import ProtectedRoute from "@/components/Protected/ProtectedRoute"
-import {useAppSelector} from "@/reduxStore/hook/customHookReducer"
+import {
+  generate_socket_connection,
+  socket,
+} from "@/components/socket/socketManager"
+import {
+  useAppDispatch,
+  useAppSelector,
+} from "@/reduxStore/hook/customHookReducer"
+import {
+  addUserOnline,
+  removeOnlineFriend,
+  setOnlineUsersList,
+} from "@/reduxStore/slices/onlineUsers"
 import React, {useEffect, useState} from "react"
 
 const page = () => {
   // const [isChatFullSize, setIsChatFullSize] = useState("")
   const [windowWidth, setWindowWidth] = useState(0)
   const [show, setShow] = useState("dashboard")
+  const dispatch = useAppDispatch()
+  const onlineusers = useAppSelector(state => state.OnlineUserReducer)
+  console.log("online users are", onlineusers)
+  const user = useAppSelector(state => state.authReducer.user)
+
   // console.log(windowWidth)
   const activeTheme = useAppSelector(
     state => state.dashBoardReducer.activeTheme
@@ -24,37 +41,37 @@ const page = () => {
       window.removeEventListener("resize", handleResize)
     }
   }, [])
-  const renderMobileToggle = () => (
-    <div className="fixed top-4 left-4 z-50 flex gap-2">
-      <button
-        className="px-3 py-1 bg-blue-500 text-white rounded"
-        onClick={() => setShow("dashboard")}
-      >
-        Dashboard
-      </button>
-      <button
-        className="px-3 py-1 bg-green-500 text-white rounded"
-        onClick={() => setShow("chat")}
-      >
-        Chat
-      </button>
-    </div>
-  )
-  // useEffect(() => {
-  //   setWindowWidth(window.innerWidth)
-  // }, [])
-
-  // console.log(activeTheme)
-  // console.log("hellooooo")
-  // const handleResize = e => {
-  //   if (windowWidth < 1000 && windowWidth > 800) {
-  //     if (e === "chat") {
-  //       setIsChatFullSize(prev => (prev === "chat" ? "" : "chat"))
-  //     } else if (e === "chatMain") {
-  //       setIsChatFullSize(prev => (prev === "chatMain" ? "" : "chatMain"))
-  //     }
-  //   }
-  // }
+  useEffect(() => {
+    if (user?.id) {
+      console.log("from home page.tsx we initiliazed socekt connection ")
+      generate_socket_connection(user.id)
+    }
+  }, [user?.id])
+  useEffect(() => {
+    if (socket) {
+      const handleFriendsOnline = (id: string) => {
+        dispatch(addUserOnline(id))
+      }
+      const handleFriendsOffline = (id: string) => {
+        dispatch(removeOnlineFriend(id))
+      }
+      const handle_Initial_FriendsOnlineList = (onlineFriendsIds: string[]) => {
+        console.log(
+          "Initial online friends: friends_online_list",
+          onlineFriendsIds
+        )
+        dispatch(setOnlineUsersList(onlineFriendsIds))
+      }
+      socket.on("friend_offline", handleFriendsOffline)
+      socket.on("friend_online", handleFriendsOnline)
+      socket.on("friends_online_list", handle_Initial_FriendsOnlineList)
+      return () => {
+        socket.off("friend_offline", handleFriendsOffline)
+        socket.off("friend_online", handleFriendsOnline)
+        socket.off("friends_online_list", handle_Initial_FriendsOnlineList)
+      }
+    }
+  }, [user?.id])
 
   return (
     <ProtectedRoute>
