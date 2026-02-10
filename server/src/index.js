@@ -12,16 +12,16 @@ require("dotenv").config()
 
 app.use(
   cors({
-    // origin: "http://localhost:3000",
-    origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
+    origin: "http://localhost:3000",
+    // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
   })
 )
 const io = new Server(server, {
   cors: {
-    // origin: "http://localhost:3000",
-    origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
+    origin: "http://localhost:3000",
+    // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -46,6 +46,46 @@ const userSockets = new Map()
 app.set("onlineUser", onlineUser)
 io.on("connection", socket => {
   // console.log(`a user is connected with id ${socket.id}`)
+
+  socket.on("user_online", async userId => {
+    console.log(`${userId} is online with socket ${socket.id}`)
+    // Store the mapping both ways
+    onlineUser.set(userId, socket.id)
+    userSockets.set(socket.id, userId)
+    console.log("onlineUser are", onlineUser)
+    try {
+      const friends = await prisma.friendship.findMany({
+        where: {
+          OR: [{user1Id: userId}, {user2Id: userId}],
+        },
+      })
+      const friendsIds = friends.map(f =>
+        f.user1Id === userId ? f.user2Id : f.user1Id
+      )
+      friendsIds.forEach(f => {
+        const friendsSocket = onlineUser.get(f)
+        if (friendsSocket) {
+          io.to(friendsSocket).emit("friend_online", userId)
+        }
+        console.log("send to the friend")
+      })
+      // Send currently online friends to this user
+      const onlineFriends = friendsIds.filter(friendId =>
+        onlineUser.has(friendId)
+      )
+      console.log("online friends are", onlineFriends)
+
+      if (onlineFriends.length > 0) {
+        socket.emit("friends_online_list", onlineFriends)
+      }
+    } catch (error) {
+      console.error("Error handling user_online:", error)
+    }
+
+    // console.log("All friends ", friends)
+    // console.log("Friends ids", friendsIds)
+    // // io.emit("get_online_users", Array.from(onlineUser.keys()))
+  })
 
   //FOR SENDING MESSAGES AND RECIVEING it
   socket.on("send_message", data => {
@@ -117,45 +157,7 @@ io.on("connection", socket => {
       }
     })
   })
-  socket.on("user_online", async userId => {
-    console.log(`${userId} is online with socket ${socket.id}`)
-    // Store the mapping both ways
-    onlineUser.set(userId, socket.id)
-    userSockets.set(socket.id, userId)
-    console.log("onlineUser are", onlineUser)
-    try {
-      const friends = await prisma.friendship.findMany({
-        where: {
-          OR: [{user1Id: userId}, {user2Id: userId}],
-        },
-      })
-      const friendsIds = friends.map(f =>
-        f.user1Id === userId ? f.user2Id : f.user1Id
-      )
-      friendsIds.forEach(f => {
-        const friendsSocket = onlineUser.get(f)
-        if (friendsSocket) {
-          io.to(friendsSocket).emit("friend_online", userId)
-        }
-        console.log("send to the friend")
-      })
-      // Send currently online friends to this user
-      const onlineFriends = friendsIds.filter(friendId =>
-        onlineUser.has(friendId)
-      )
-      console.log("online friends are", onlineFriends)
 
-      if (onlineFriends.length > 0) {
-        socket.emit("friends_online_list", onlineFriends)
-      }
-    } catch (error) {
-      console.error("Error handling user_online:", error)
-    }
-
-    // console.log("All friends ", friends)
-    // console.log("Friends ids", friendsIds)
-    // // io.emit("get_online_users", Array.from(onlineUser.keys()))
-  })
   socket.on("leave_room", roomId => {
     socket.leave(roomId)
   })
@@ -192,6 +194,6 @@ io.on("connection", socket => {
     // console.log(`a user is disconnect with id ${socket.id}`)
   })
 })
-server.listen(5006, () => {
+server.listen(5001, () => {
   console.log("server is running on port 5001")
 })

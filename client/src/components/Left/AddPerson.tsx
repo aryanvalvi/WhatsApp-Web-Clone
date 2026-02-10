@@ -26,6 +26,7 @@ const AddPerson = () => {
         <div className=" p-6">
           <div className="max-w-md mx-auto">
             <div className="mb-8">
+              
               <IoIosArrowBack
                 onClick={() => dispatch(setActiveTab("chat"))}
                 className="h-7 w-7  absolute"
