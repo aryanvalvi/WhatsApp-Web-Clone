@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 3006
 
 # Start the appa
-CMD ["npm", "start", "--", "-p", "3006"]
+CMD ["npm", "start", "--", "-p", "3003"]
