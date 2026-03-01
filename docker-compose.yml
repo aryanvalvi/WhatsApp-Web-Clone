@@ -36,7 +36,7 @@ services:
       NEXT_PUBLIC_Backend_Url2: ${NEXT_PUBLIC_Backend_Url2}
       NEXT_PUBLIC_Frontend_Url: ${NEXT_PUBLIC_Frontend_Url}
     ports:
-      - "3006:3006"
+      - "3003:3003"
     depends_on:
       - backend
     restart: always
