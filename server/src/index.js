@@ -9,10 +9,10 @@ const cookieParser = require("cookie-parser")
 const {PrismaClient} = require("@prisma/client")
 const prisma = new PrismaClient()
 require("dotenv").config()
-
+console.log("Frontend_Url:", process.env.Frontend_Url)
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.Frontend_Url,
     // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,
@@ -20,7 +20,7 @@ app.use(
 )
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.Frontend_Url,
     // origin: [process.env.Frontend_Url, process.env.Frontend_Url2],
     methods: ["GET", "POST"],
     credentials: true,

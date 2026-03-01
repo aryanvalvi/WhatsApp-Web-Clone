@@ -10,8 +10,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./chat-db-backup.sql:/docker-entrypoint-initdb.d/restore.sql
-    network_mode: "host"   # <-- use host networking
-    # ports mapping not needed in host mode
+    ports:
+      - "5432:5432"
 
   backend:
     build: ./server
@@ -22,10 +22,12 @@ services:
       api_key: ${api_key}
       api_secret: ${api_secret}
       JWT_SECRET: ${JWT_SECRET}
-    network_mode: "host"
-    # ports mapping not needed in host mode
+      Frontend_Url: ${Frontend_Url}    
+    ports:
+      - "5001:5001"
     depends_on:
       - postgres
+    restart: unless-stopped
 
   frontend:
     build: ./client
@@ -33,10 +35,11 @@ services:
     environment:
       NEXT_PUBLIC_Backend_Url2: ${NEXT_PUBLIC_Backend_Url2}
       NEXT_PUBLIC_Frontend_Url: ${NEXT_PUBLIC_Frontend_Url}
-    restart: always
-    network_mode: "host"
+    ports:
+      - "3006:3006"
     depends_on:
       - backend
+    restart: always
 
 volumes:
   postgres_data:
